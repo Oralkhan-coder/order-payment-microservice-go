@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Oralkhan-coder/payment-service/internal/http/dto"
+	"github.com/Oralkhan-coder/payment-service/internal/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,5 +44,15 @@ func (h *PaymentHandler) GetPaymentStatus(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, payment)
+	c.JSON(http.StatusOK, mapToPaymentResponse(payment))
+}
+
+func mapToPaymentResponse(p *model.Payment) dto.PaymentResponse {
+	return dto.PaymentResponse{
+		ID:            p.ID,
+		OrderID:       p.OrderID,
+		TransactionID: p.TransactionID,
+		Amount:        p.Amount,
+		Status:        string(p.Status),
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Oralkhan-coder/order-service/internal/http/dto"
+	"github.com/Oralkhan-coder/order-service/internal/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,7 +41,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, order)
+	c.JSON(http.StatusOK, mapToOrderResponse(order))
 }
 
 func (h *OrderHandler) CancelOrder(c *gin.Context) {
@@ -53,4 +54,15 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Order cancelled successfully"})
+}
+
+func mapToOrderResponse(o *model.Order) dto.OrderResponse {
+	return dto.OrderResponse{
+		ID:         o.ID,
+		CustomerID: o.CustomerID,
+		ItemName:   o.ItemName,
+		Amount:     o.Amount,
+		Status:     string(o.Status),
+		CreatedAt:  o.CreatedAt,
+	}
 }
