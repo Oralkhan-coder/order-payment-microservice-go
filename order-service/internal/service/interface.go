@@ -11,3 +11,7 @@ type OrderRepo interface {
 	GetByID(ctx context.Context, id string) (*model.Order, error)
 	UpdateStatus(ctx context.Context, id string, status model.OrderStatus) error
 }
+
+type PaymentClient interface {
+	AuthorizePayment(ctx context.Context, orderID string, amount int64) (string, error)
+}

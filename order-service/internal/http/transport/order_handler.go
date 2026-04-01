@@ -25,7 +25,14 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	id, err := h.srv.CreateOrder(c.Request.Context(), req.CustomerID, req.ItemName, req.Amount)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		switch err {
+		case service.ErrInvalidAmount:
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case service.ErrPaymentUnavailable:
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Payment Service Unavailable", "order_id": id})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 
@@ -49,7 +56,14 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 
 	err := h.srv.CancelOrder(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		switch err {
+		case service.ErrOrderAlreadyPaid, service.ErrOrderAlreadyCancelled:
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		case service.ErrOrderNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
 		return
 	}
 

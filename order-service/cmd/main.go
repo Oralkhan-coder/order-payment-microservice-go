@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Oralkhan-coder/order-service/internal/http"
+	"github.com/Oralkhan-coder/order-service/internal/infrastructure/payment"
 	"github.com/Oralkhan-coder/order-service/internal/repository"
 	"github.com/Oralkhan-coder/order-service/internal/service"
 	"github.com/Oralkhan-coder/order-service/pkg"
@@ -30,8 +31,16 @@ func main() {
 	}
 	defer db.Pool.Close()
 
+	// External adapter (Payment client)
+	paymentClient := payment.NewPaymentClient("http://localhost:8081")
+
+	// Repository
 	orderRepo := repository.NewOrderRepository(db.Pool)
-	orderService := service.NewOrderService(orderRepo)
+
+	// Use Case
+	orderService := service.NewOrderService(orderRepo, paymentClient)
+
+	// Delivery
 	server := http.NewServer(orderService)
 
 	log.Println("starting the server on :8080")

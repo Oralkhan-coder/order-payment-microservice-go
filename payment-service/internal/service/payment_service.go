@@ -21,13 +21,19 @@ func NewPaymentService(repo PaymentRepo) *PaymentService {
 }
 
 func (s *PaymentService) ProcessPayment(ctx context.Context, orderID string, amount int64) (model.Payment, error) {
+	status := model.PaymentStatusAuthorized
+	if amount > 100000 {
+		status = model.PaymentStatusDeclined
+	}
+
 	payment := model.Payment{
 		ID:            uuid.New().String(),
 		OrderID:       orderID,
 		TransactionID: uuid.New().String(),
 		Amount:        amount,
-		Status:        model.PaymentStatusAuthorized,
+		Status:        status,
 	}
+
 	err := s.repo.Create(ctx, payment)
 	return payment, err
 }
