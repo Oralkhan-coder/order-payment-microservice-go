@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"log"
+
+	"github.com/Oralkhan-coder/order-service/internal/http"
+	"github.com/Oralkhan-coder/order-service/internal/repository"
+	"github.com/Oralkhan-coder/order-service/internal/service"
+	"github.com/Oralkhan-coder/order-service/pkg"
 )
 
 func main() {
@@ -16,7 +21,7 @@ func main() {
 	}
 
 	if err := pkg.RunMigrations(cfg); err != nil {
-		log.Fatalf("failed to run migrations: %v", err)
+		log.Printf("failed to run migrations: %v", err)
 	}
 
 	db, err := pkg.NewDB(ctx, cfg)
@@ -27,7 +32,7 @@ func main() {
 
 	orderRepo := repository.NewOrderRepository(db.Pool)
 	orderService := service.NewOrderService(orderRepo)
-	server := internalHttp.NewSimpleServer(orderService)
+	server := http.NewServer(orderService)
 
 	log.Println("starting the server on :8080")
 

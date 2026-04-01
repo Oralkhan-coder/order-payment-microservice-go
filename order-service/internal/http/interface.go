@@ -1,6 +1,6 @@
 package http
 
-import "order-service/internal/http/transport"
+import "github.com/Oralkhan-coder/order-service/internal/http/transport"
 
 type Order interface {
 	transport.OrderSrv

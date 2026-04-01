@@ -1,8 +1,9 @@
 package transport
 
 import (
-	"context"
+	"net/http"
 
+	"github.com/Oralkhan-coder/order-service/internal/http/dto"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +28,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"order_id": id})	
+	c.JSON(http.StatusOK, gin.H{"order_id": id})
 }
 
 func (h *OrderHandler) GetOrder(c *gin.Context) {
@@ -39,7 +40,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, order)		
+	c.JSON(http.StatusOK, order)
 }
 
 func (h *OrderHandler) CancelOrder(c *gin.Context) {
@@ -51,5 +52,5 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Order cancelled successfully"})	
+	c.JSON(http.StatusOK, gin.H{"message": "Order cancelled successfully"})
 }

@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"time"
 
+	"github.com/Oralkhan-coder/order-service/internal/model"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -14,18 +16,16 @@ func NewOrderRepository(pool *pgxpool.Pool) *OrderRepository {
 	return &OrderRepository{pool: pool}
 }
 
-func (r *OrderRepository) Create(ctx context.Context, o model.Order) (int, error) {
+func (r *OrderRepository) Create(ctx context.Context, o model.Order) error {
 	q := `
-		INSERT INTO orders (customer_id, item_name, amount)
-		VALUES ($1, $2, $3)
-		RETURNING id
+		INSERT INTO orders (id, customer_id, item_name, amount, status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	var id int
-	err := r.pool.QueryRow(ctx, q, o.CustomerID, o.ItemName, o.Amount).Scan(&id)
-	return id, err
+	_, err := r.pool.Exec(ctx, q, o.ID, o.CustomerID, o.ItemName, o.Amount, o.Status, time.Now())
+	return err
 }
 
-func (r *OrderRepository) GetByID(ctx context.Context, id int) (*model.Order, error) {
+func (r *OrderRepository) GetByID(ctx context.Context, id string) (*model.Order, error) {
 	q := `
 		SELECT id, customer_id, item_name, amount, status, created_at
 		FROM orders
@@ -41,7 +41,7 @@ func (r *OrderRepository) GetByID(ctx context.Context, id int) (*model.Order, er
 	return &o, nil
 }
 
-func (r *OrderRepository) UpdateStatus(ctx context.Context, id int, status model.OrderStatus) error {
+func (r *OrderRepository) UpdateStatus(ctx context.Context, id string, status model.OrderStatus) error {
 	q := `
 		UPDATE orders
 		SET status=$1	
