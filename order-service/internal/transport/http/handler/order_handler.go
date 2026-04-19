@@ -1,10 +1,11 @@
-package transport
+package handler
 
 import (
 	"net/http"
 
-	"github.com/Oralkhan-coder/order-service/internal/http/dto"
 	"github.com/Oralkhan-coder/order-service/internal/model"
+	"github.com/Oralkhan-coder/order-service/internal/service"
+	"github.com/Oralkhan-coder/order-service/internal/transport/http/dto"
 	"github.com/gin-gonic/gin"
 )
 

@@ -3,44 +3,52 @@ package main
 import (
 	"context"
 	"log"
+	"net"
+	"os"
 
-	"github.com/Oralkhan-coder/order-service/internal/http"
-	"github.com/Oralkhan-coder/order-service/internal/infrastructure/payment"
+	orderv1 "github.com/Oralkhan-coder/order-payment-proto-generation/order/v1"
+	"github.com/Oralkhan-coder/order-service/config"
+	"github.com/Oralkhan-coder/order-service/internal/infrastructure/grpcconn"
+	"github.com/Oralkhan-coder/order-service/internal/infrastructure/postgres"
 	"github.com/Oralkhan-coder/order-service/internal/repository"
 	"github.com/Oralkhan-coder/order-service/internal/service"
+	"github.com/Oralkhan-coder/order-service/internal/transport/http"
 	"github.com/Oralkhan-coder/order-service/pkg"
+	"google.golang.org/grpc"
 )
 
 func main() {
 	ctx := context.Background()
-	cfg := pkg.Config{
-		Database: "done_db",
-		Host:     "localhost",
-		Port:     5432,
-		Username: "postgres",
-		Password: "postgres",
-	}
-
-	if err := pkg.RunMigrations(cfg); err != nil {
+	cfg := config.InitConfig()
+	if err := pkg.RunMigrations(*cfg.Db); err != nil {
 		log.Printf("failed to run migrations: %v", err)
 	}
 
-	db, err := pkg.NewDB(ctx, cfg)
+	db, err := postgres.NewDB(ctx, *cfg.Db)
 	if err != nil {
 		log.Fatalf("unable to connect to database: %v", err)
 	}
 	defer db.Pool.Close()
 
-	// External adapter (Payment client)
-	paymentClient := payment.NewPaymentClient("http://localhost:8081")
+	paymentClient, err := grpcconn.NewGRPCPaymentConn()
+	if err != nil {
+		log.Fatalf("unable to connect to payment service: %v", err)
+	}
 
-	// Repository
 	orderRepo := repository.NewOrderRepository(db.Pool)
-
-	// Use Case
 	orderService := service.NewOrderService(orderRepo, paymentClient)
 
-	// Delivery
+	grpcOrderServicePort := os.Getenv("GRPC_ORDER_SERVICE_PORT")
+	if grpcOrderServicePort == "" {
+		grpcOrderServicePort = "9090"
+	}
+	listener, err := net.Listen("tcp", ":"+grpcOrderServicePort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	orderv1.RegisterOrderServiceServer(grpcServer, orderService)
+
 	server := http.NewServer(orderService)
 
 	log.Println("starting the server on :8080")

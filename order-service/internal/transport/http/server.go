@@ -3,17 +3,17 @@ package http
 import (
 	"context"
 
-	"github.com/Oralkhan-coder/order-service/internal/http/transport"
+	"github.com/Oralkhan-coder/order-service/internal/transport/http/handler"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
 	router       *gin.Engine
-	orderHandler *transport.OrderHandler
+	orderHandler *handler.OrderHandler
 }
 
-func NewServer(srv transport.OrderSrv) *Server {
-	orderHandler := transport.NewOrderHandler(srv)
+func NewServer(srv handler.OrderSrv) *Server {
+	orderHandler := handler.NewOrderHandler(srv)
 
 	router := gin.Default()
 
