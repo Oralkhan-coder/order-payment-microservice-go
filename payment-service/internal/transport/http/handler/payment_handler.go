@@ -1,10 +1,10 @@
-package http
+package handler
 
 import (
 	"net/http"
 
 	"github.com/Oralkhan-coder/payment-service/internal/model"
-	"github.com/Oralkhan-coder/payment-service/internal/transport/dto"
+	"github.com/Oralkhan-coder/payment-service/internal/transport/http/dto"
 	"github.com/gin-gonic/gin"
 )
 

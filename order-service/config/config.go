@@ -6,7 +6,7 @@ type Config struct {
 
 func InitConfig() *Config {
 	dbCfg := PostgresConfig{
-		Database: "done_db",
+		Database: "order_db",
 		Host:     "localhost",
 		Port:     5432,
 		Username: "postgres",

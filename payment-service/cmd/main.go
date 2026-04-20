@@ -8,7 +8,8 @@ import (
 	"github.com/Oralkhan-coder/payment-service/internal/infrastructure/postgres"
 	"github.com/Oralkhan-coder/payment-service/internal/repository"
 	"github.com/Oralkhan-coder/payment-service/internal/service"
-	"github.com/Oralkhan-coder/payment-service/internal/transport"
+	"github.com/Oralkhan-coder/payment-service/internal/transport/grpc"
+	"github.com/Oralkhan-coder/payment-service/internal/transport/http"
 	"github.com/Oralkhan-coder/payment-service/pkg"
 )
 
@@ -28,10 +29,15 @@ func main() {
 
 	paymentRepo := repository.NewPaymentRepository(db.Pool)
 	paymentService := service.NewPaymentService(paymentRepo)
-	server := transport.NewServer(paymentService)
+
+	grpcServer := grpc.NewPaymentGRPCServer(paymentService)
+	server := http.NewServer(paymentService)
 
 	log.Println("starting the server on :8081")
 
+	go func() {
+		grpcServer.Run(ctx)
+	}()
 	if err := server.Run(ctx, ":8081"); err != nil {
 		log.Fatalf("server stopped: %v", err)
 	}

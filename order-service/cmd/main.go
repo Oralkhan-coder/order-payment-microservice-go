@@ -38,8 +38,9 @@ func main() {
 	grpcServer := grpc.NewOrderGRPCServer(orderService)
 	server := http.NewServer(orderService)
 
+	go func() {
+		grpcServer.Run(ctx)
+	}()
 	log.Println("starting the server on :8080")
-
-	grpcServer.Run(ctx)
 	server.Run(ctx)
 }

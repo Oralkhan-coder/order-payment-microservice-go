@@ -1,19 +1,19 @@
-package transport
+package http
 
 import (
 	"context"
 
-	"github.com/Oralkhan-coder/payment-service/internal/transport/http"
+	"github.com/Oralkhan-coder/payment-service/internal/transport/http/handler"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
 	router         *gin.Engine
-	paymentHandler *http.PaymentHandler
+	paymentHandler *handler.PaymentHandler
 }
 
-func NewServer(srv http.PaymentSrv) *Server {
-	paymentHandler := http.NewPaymentHandler(srv)
+func NewServer(srv handler.PaymentSrv) *Server {
+	paymentHandler := handler.NewPaymentHandler(srv)
 
 	router := gin.Default()
 
