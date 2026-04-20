@@ -23,7 +23,7 @@ func NewOrderGRPCServer(srv handler.OrderSrv) *OrderGRPCServer {
 	orderv1.RegisterOrderServiceServer(grpcServer, grpcOrderHandler)
 
 	return &OrderGRPCServer{
-		grpcServer:   grpc.NewServer(),
+		grpcServer:   grpcServer,
 		orderHandler: grpcOrderHandler,
 	}
 }

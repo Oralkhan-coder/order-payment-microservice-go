@@ -1,7 +1,9 @@
 package config
 
 type Config struct {
-	Db *PostgresConfig
+	Db                 *PostgresConfig
+	PaymentServiceHost string
+	PaymentServicePort string
 }
 
 func InitConfig() *Config {
@@ -14,7 +16,9 @@ func InitConfig() *Config {
 	}
 
 	return &Config{
-		Db: &dbCfg,
+		Db:                 &dbCfg,
+		PaymentServiceHost: "localhost",
+		PaymentServicePort: "9091",
 	}
 }
 

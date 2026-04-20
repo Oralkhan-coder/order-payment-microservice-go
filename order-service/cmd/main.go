@@ -27,7 +27,7 @@ func main() {
 	}
 	defer db.Pool.Close()
 
-	paymentClient, err := grpcconn.NewGRPCPaymentConn()
+	paymentClient, err := grpcconn.NewGRPCPaymentConn(cfg.PaymentServiceHost, cfg.PaymentServicePort)
 	if err != nil {
 		log.Fatalf("unable to connect to payment service: %v", err)
 	}

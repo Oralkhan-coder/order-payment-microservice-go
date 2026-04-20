@@ -3,7 +3,6 @@ package grpcconn
 import (
 	"context"
 	"log"
-	"os"
 
 	paymentv1 "github.com/Oralkhan-coder/order-payment-proto-generation/payment/v1"
 	"google.golang.org/grpc"
@@ -14,13 +13,10 @@ type GRPCPaymentConn struct {
 	client paymentv1.PaymentServiceClient
 }
 
-func NewGRPCPaymentConn() (*GRPCPaymentConn, error) {
-	port := os.Getenv("PAYMENT_SERVICE_PORT")
-	if port == "" {
-		port = "9091"
-	}
-	log.Printf("Connecting to payment grpc server at port %s", port)
-	conn, err := grpc.NewClient(port, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func NewGRPCPaymentConn(host, port string) (*GRPCPaymentConn, error) {
+	address := host + ":" + port
+	log.Printf("Connecting to payment grpc server at %s", address)
+	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
