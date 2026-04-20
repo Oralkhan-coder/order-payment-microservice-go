@@ -1,10 +1,10 @@
-package transport
+package http
 
 import (
 	"net/http"
 
-	"github.com/Oralkhan-coder/payment-service/internal/http/dto"
 	"github.com/Oralkhan-coder/payment-service/internal/model"
+	"github.com/Oralkhan-coder/payment-service/internal/transport/dto"
 	"github.com/gin-gonic/gin"
 )
 

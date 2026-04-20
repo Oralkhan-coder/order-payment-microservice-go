@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Oralkhan-coder/payment-service/config"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func RunMigrations(cfg Config) error {
+func RunMigrations(cfg *config.PostgresConfig) error {
 	sourceURL := "file://migrations"
 	databaseURL := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.Database)
