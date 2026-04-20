@@ -10,7 +10,7 @@ func InitConfig() *Config {
 		Host:     "localhost",
 		Port:     5432,
 		Username: "postgres",
-		Password: "farkhat2006",
+		Password: "postgres",
 	}
 
 	return &Config{

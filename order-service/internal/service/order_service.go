@@ -19,10 +19,10 @@ var (
 
 type OrderService struct {
 	repo          OrderRepo
-	paymentClient PaymentClient
+	paymentClient PaymentGRPCClient
 }
 
-func NewOrderService(repo OrderRepo, paymentClient PaymentClient) *OrderService {
+func NewOrderService(repo OrderRepo, paymentClient PaymentGRPCClient) *OrderService {
 	return &OrderService{
 		repo:          repo,
 		paymentClient: paymentClient,
@@ -46,7 +46,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, customerID string, itemN
 		return "", err
 	}
 
-	status, err := s.paymentClient.AuthorizePayment(ctx, order.ID, order.Amount)
+	status, err := s.paymentClient.Pay(ctx, order.ID, order.Amount)
 	if err != nil {
 		log.Printf("Payment authorization failed for order %s: %v", order.ID, err)
 		_ = s.repo.UpdateStatus(ctx, order.ID, model.OrderStatusFailed)

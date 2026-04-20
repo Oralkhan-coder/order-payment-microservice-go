@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"net"
-	"os"
 
 	"github.com/Oralkhan-coder/order-service/config"
 	"github.com/Oralkhan-coder/order-service/internal/infrastructure/grpcconn"

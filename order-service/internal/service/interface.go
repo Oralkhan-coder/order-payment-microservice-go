@@ -13,6 +13,6 @@ type OrderRepo interface {
 	GetOrderStatus(ctx context.Context, id string) (*model.OrderStatus, error)
 }
 
-type PaymentClient interface {
-	AuthorizePayment(ctx context.Context, orderID string, amount int64) (string, error)
+type PaymentGRPCClient interface {
+	Pay(ctx context.Context, orderID string, amount int64) (string, error)
 }
