@@ -10,6 +10,7 @@ type OrderRepo interface {
 	Create(ctx context.Context, o model.Order) error
 	GetByID(ctx context.Context, id string) (*model.Order, error)
 	UpdateStatus(ctx context.Context, id string, status model.OrderStatus) error
+	GetOrderStatus(ctx context.Context, id string) (*model.OrderStatus, error)
 }
 
 type PaymentClient interface {

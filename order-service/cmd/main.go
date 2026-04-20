@@ -6,15 +6,14 @@ import (
 	"net"
 	"os"
 
-	orderv1 "github.com/Oralkhan-coder/order-payment-proto-generation/order/v1"
 	"github.com/Oralkhan-coder/order-service/config"
 	"github.com/Oralkhan-coder/order-service/internal/infrastructure/grpcconn"
 	"github.com/Oralkhan-coder/order-service/internal/infrastructure/postgres"
 	"github.com/Oralkhan-coder/order-service/internal/repository"
 	"github.com/Oralkhan-coder/order-service/internal/service"
+	"github.com/Oralkhan-coder/order-service/internal/transport/grpc"
 	"github.com/Oralkhan-coder/order-service/internal/transport/http"
 	"github.com/Oralkhan-coder/order-service/pkg"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -38,20 +37,11 @@ func main() {
 	orderRepo := repository.NewOrderRepository(db.Pool)
 	orderService := service.NewOrderService(orderRepo, paymentClient)
 
-	grpcOrderServicePort := os.Getenv("GRPC_ORDER_SERVICE_PORT")
-	if grpcOrderServicePort == "" {
-		grpcOrderServicePort = "9090"
-	}
-	listener, err := net.Listen("tcp", ":"+grpcOrderServicePort)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	grpcServer := grpc.NewServer()
-	orderv1.RegisterOrderServiceServer(grpcServer, orderService)
-
+	grpcServer := grpc.NewOrderGRPCServer(orderService)
 	server := http.NewServer(orderService)
 
 	log.Println("starting the server on :8080")
 
+	grpcServer.Run(ctx)
 	server.Run(ctx)
 }

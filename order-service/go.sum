@@ -2,6 +2,8 @@ github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 h1:L/gRVlceqvL25
 github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
+github.com/Oralkhan-coder/order-payment-proto-files v0.0.0-20260419140252-56e45af2ebb5 h1:BmxvZsuaw1EY0KX32lTBh4aHDDiHahZXMlaT0kJBjpI=
+github.com/Oralkhan-coder/order-payment-proto-files v0.0.0-20260419140252-56e45af2ebb5/go.mod h1:fMGPUZ2pR/ue2npXZDsJB871oAv3Lu0V3069icCdA/Q=
 github.com/Oralkhan-coder/order-payment-proto-generation v0.0.0-20260419183843-52af59449564 h1:boIP3eSG8LlA0JxD4fY8E/++VMl2nBm65KyWRu335tU=
 github.com/Oralkhan-coder/order-payment-proto-generation v0.0.0-20260419183843-52af59449564/go.mod h1:Cv0AJshghNzaxH5wjiULs+uy+RA28BEwanIxrHpJ8og=
 github.com/bytedance/gopkg v0.1.3 h1:TPBSwH8RsouGCBcMBktLt1AymVo2TVsBVCY4b6TnZ/M=

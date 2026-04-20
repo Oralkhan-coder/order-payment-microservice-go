@@ -41,6 +41,16 @@ func (r *OrderRepository) GetByID(ctx context.Context, id string) (*model.Order,
 	return &o, nil
 }
 
+func (r *OrderRepository) GetOrderStatus(ctx context.Context, id string) (*model.OrderStatus, error) {
+	q := `SELECT status FROM orders WHERE id = $1`
+	var o model.OrderStatus
+	err := r.pool.QueryRow(ctx, q, id).Scan(&o)
+	if err != nil {
+		return nil, err
+	}
+	return &o, nil
+}
+
 func (r *OrderRepository) UpdateStatus(ctx context.Context, id string, status model.OrderStatus) error {
 	q := `
 		UPDATE orders
