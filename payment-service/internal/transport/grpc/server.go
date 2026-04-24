@@ -9,7 +9,9 @@ import (
 
 	paymentv1 "github.com/Oralkhan-coder/order-payment-proto-generation/payment/v1"
 	"github.com/Oralkhan-coder/payment-service/internal/transport/grpc/handler"
+	"github.com/Oralkhan-coder/payment-service/internal/transport/grpc/middleware"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type PaymentGRPCServer struct {
@@ -19,8 +21,9 @@ type PaymentGRPCServer struct {
 
 func NewPaymentGRPCServer(srv handler.PaymentSrv) *PaymentGRPCServer {
 	grpcPaymentHandler := handler.NewGRPCPaymentHandler(srv)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(middleware.Interceptor))
 	paymentv1.RegisterPaymentServiceServer(grpcServer, grpcPaymentHandler)
+	reflection.Register(grpcServer)
 
 	return &PaymentGRPCServer{grpcServer, grpcPaymentHandler}
 }

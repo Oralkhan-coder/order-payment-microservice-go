@@ -35,3 +35,23 @@ func (h *GRPCPaymentHandler) ProcessPayment(ctx context.Context, req *paymentv1.
 		ProcessedAt:   timestamppb.New(time.Now()),
 	}, nil
 }
+
+func (h *GRPCPaymentHandler) ListPayments(ctx context.Context, req *paymentv1.ListPaymentsRequest) (*paymentv1.ListPaymentsResponse, error) {
+	payments, err := h.srv.ListPayments(ctx, req)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list payments: %v", err)
+	}
+
+	var pbPayments []*paymentv1.PaymentResponse
+	for _, p := range payments {
+		pbPayments = append(pbPayments, &paymentv1.PaymentResponse{
+			TransactionId: p.ID,
+			Amount:        p.Amount,
+			Status:        string(p.Status),
+		})
+	}
+
+	return &paymentv1.ListPaymentsResponse{
+		Payments: pbPayments,
+	}, nil
+}
