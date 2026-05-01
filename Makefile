@@ -5,11 +5,6 @@ export
 
 PROJECT_ROOT := $(CURDIR)
 
-run-all:
-	go run $(PROJECT_ROOT)/order-service/cmd/main.go & \
-	go run $(PROJECT_ROOT)/payment-service/cmd/main.go & \
-	go run $(PROJECT_ROOT)/notification-service/cmd/main.go
-
 env-up:
 	@docker compose up -d order-db
 	@docker compose up -d payment-db

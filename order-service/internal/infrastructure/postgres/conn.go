@@ -5,34 +5,48 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Oralkhan-coder/order-service/config"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type DB struct {
-	Pool *pgxpool.Pool
+type Pool interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	OpTimeout() time.Duration
+	Close()
 }
 
-func NewDB(ctx context.Context, cfg config.PostgresConfig) (*DB, error) {
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.Database)
+type ConnectionPool struct {
+	*pgxpool.Pool
+	opTimeout time.Duration
+}
 
-	config, err := pgxpool.ParseConfig(connStr)
+func NewConnectionPool(ctx context.Context, config Config) (*ConnectionPool, error) {
+	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		config.User, config.Password, config.Host, config.Port, config.Database)
+
+	pgxConfig, err := pgxpool.ParseConfig(connString)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse config: %w", err)
+		return nil, fmt.Errorf("parse pgxconfig: %w", err)
 	}
 
-	config.MaxConns = 20
-	config.MaxConnIdleTime = 5 * time.Minute
-
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := pgxpool.NewWithConfig(ctx, pgxConfig)
 	if err != nil {
-		return nil, fmt.Errorf("unable to connect to database: %w", err)
+		return nil, fmt.Errorf("create connection pool: %w", err)
 	}
 
 	if err := pool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("ping failed: %w", err)
+		return nil, fmt.Errorf("ping connection pool: %w", err)
 	}
 
-	return &DB{Pool: pool}, nil
+	return &ConnectionPool{
+		Pool:      pool,
+		opTimeout: config.Timeout,
+	}, nil
+}
+
+func (p *ConnectionPool) OpTimeout() time.Duration {
+	return p.opTimeout
 }
