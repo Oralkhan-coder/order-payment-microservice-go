@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	paymentv1 "github.com/Oralkhan-coder/order-payment-proto-generation/payment/v1"
 	"github.com/Oralkhan-coder/payment-service/internal/model"
@@ -16,11 +17,16 @@ type PaymentRepo interface {
 }
 
 type PaymentService struct {
-	repo PaymentRepo
+	repo      PaymentRepo
+	publisher PaymentEventPublisher
 }
 
-func NewPaymentService(repo PaymentRepo) *PaymentService {
-	return &PaymentService{repo: repo}
+type PaymentEventPublisher interface {
+	PublishPaymentCompleted(ctx context.Context, eventID, orderID string, amount int64, customerEmail, status string) error
+}
+
+func NewPaymentService(repo PaymentRepo, publisher PaymentEventPublisher) *PaymentService {
+	return &PaymentService{repo: repo, publisher: publisher}
 }
 
 func (s *PaymentService) ProcessPayment(ctx context.Context, orderID string, amount int64) (model.Payment, error) {
@@ -38,7 +44,22 @@ func (s *PaymentService) ProcessPayment(ctx context.Context, orderID string, amo
 	}
 
 	err := s.repo.Create(ctx, payment)
-	return payment, err
+	if err != nil {
+		return payment, err
+	}
+
+	if err = s.publisher.PublishPaymentCompleted(
+		ctx,
+		uuid.New().String(),
+		payment.OrderID,
+		payment.Amount,
+		fmt.Sprintf("%s@example.com", payment.OrderID),
+		string(payment.Status),
+	); err != nil {
+		return payment, err
+	}
+
+	return payment, nil
 }
 
 func (s *PaymentService) GetPaymentByOrderID(ctx context.Context, orderID string) (*model.Payment, error) {
