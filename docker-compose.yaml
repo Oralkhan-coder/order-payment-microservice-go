@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - order_db_data:/var/lib/postgresql/data
+      - order_db_data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${ORDER_POSTGRES_USER} -d ${ORDER_POSTGRES_DB}" ]
       interval: 5s
@@ -26,7 +26,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - payment_db_data:/var/lib/postgresql/data
+      - payment_db_data:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PAYMENT_POSTGRES_USER} -d ${PAYMENT_POSTGRES_DB}" ]
       interval: 5s
@@ -44,57 +44,16 @@ services:
       timeout: 5s
       retries: 10
 
-  payment-service:
-    build:
-      context: ./payment-service
-    depends_on:
-      payment-db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      POSTGRESQL_DB: ${PAYMENT_POSTGRES_DB}
-      POSTGRESQL_HOST: payment-db
-      POSTGRESQL_PORT: 5432
-      POSTGRESQL_USERNAME: ${PAYMENT_POSTGRES_USER}
-      POSTGRESQL_PASSWORD: ${PAYMENT_POSTGRES_PASSWORD}
-      RABBITMQ_URL: ${RABBITMQ_URL}
-      GRPC_PAYMENT_SERVICE_PORT: 9091
-      PAYMENT_HTTP_PORT: 8081
-    ports:
-      - "8081:8081"
-      - "9091:9091"
+  payment-db-migrate:
+    image: migrate/migrate:v4.19.1
+    volumes:
+      - ${PROJECT_ROOT}/payment-service/migrations:/migrations
 
-  order-service:
-    build:
-      context: ./order-service
-    depends_on:
-      order-db:
-        condition: service_healthy
-      payment-service:
-        condition: service_started
-    environment:
-      POSTGRESQL_DB: ${ORDER_POSTGRES_DB}
-      POSTGRESQL_HOST: order-db
-      POSTGRESQL_PORT: 5432
-      POSTGRESQL_USERNAME: ${ORDER_POSTGRES_USER}
-      POSTGRESQL_PASSWORD: ${ORDER_POSTGRES_PASSWORD}
-      PAYMENT_SERVICE_HOST: payment-service
-      PAYMENT_SERVICE_PORT: 9091
-      PORT: 8080
-      GRPC_ORDER_SERVICE_PORT: 9090
-    ports:
-      - "8080:8080"
-      - "9090:9090"
+  order-db-migrate:
+    image: migrate/migrate:v4.19.1
+    volumes:
+      - ${PROJECT_ROOT}/order-service/migrations:/migrations
 
-  notification-service:
-    build:
-      context: ./notification-service
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      RABBITMQ_URL: ${RABBITMQ_URL}
 
 volumes:
   order_db_data:
