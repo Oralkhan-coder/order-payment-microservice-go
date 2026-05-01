@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os/signal"
 	"syscall"
@@ -13,23 +14,23 @@ import (
 	"github.com/Oralkhan-coder/payment-service/internal/service"
 	"github.com/Oralkhan-coder/payment-service/internal/transport/grpc"
 	"github.com/Oralkhan-coder/payment-service/internal/transport/http"
-	"github.com/Oralkhan-coder/payment-service/pkg"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(".env", "../.env"); err != nil {
+		log.Printf("warning: .env file not loaded: %v", err)
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 	cfg := config.InitConfig()
 
-	if err := pkg.RunMigrations(cfg.Db); err != nil {
-		log.Printf("failed to run migrations: %v", err)
-	}
-
-	db, err := postgres.NewDB(ctx, cfg.Db)
+	db, err := infrastructure_postgres.NewConnectionPool(ctx, infrastructure_postgres.NewConfigMust())
 	if err != nil {
-		log.Fatalf("unable to connect to database: %v", err)
+		fmt.Println("failed to connect to database: ", err)
 	}
-	defer db.Pool.Close()
+	defer db.Close()
 
 	rmqConn, err := rabbitmq.NewConnection(cfg.RabbitMQURL)
 	if err != nil {
@@ -42,7 +43,7 @@ func main() {
 		log.Fatalf("unable to create rabbitmq publisher: %v", err)
 	}
 
-	paymentRepo := repository.NewPaymentRepository(db.Pool)
+	paymentRepo := repository.NewPaymentRepository(db)
 	paymentService := service.NewPaymentService(paymentRepo, publisher)
 
 	grpcServer := grpc.NewPaymentGRPCServer(paymentService)

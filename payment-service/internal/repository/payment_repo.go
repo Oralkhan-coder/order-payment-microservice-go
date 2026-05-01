@@ -4,19 +4,22 @@ import (
 	"context"
 	"fmt"
 
+	infrastructure_postgres "github.com/Oralkhan-coder/payment-service/internal/infrastructure/postgres"
 	"github.com/Oralkhan-coder/payment-service/internal/model"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PaymentRepository struct {
-	pool *pgxpool.Pool
+	pool infrastructure_postgres.Pool
 }
 
-func NewPaymentRepository(pool *pgxpool.Pool) *PaymentRepository {
+func NewPaymentRepository(pool infrastructure_postgres.Pool) *PaymentRepository {
 	return &PaymentRepository{pool: pool}
 }
 
 func (r *PaymentRepository) Create(ctx context.Context, p model.Payment) error {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	q := `
 		INSERT INTO payments (id, order_id, transaction_id, amount, status)
 		VALUES ($1, $2, $3, $4, $5)
@@ -26,6 +29,9 @@ func (r *PaymentRepository) Create(ctx context.Context, p model.Payment) error {
 }
 
 func (r *PaymentRepository) GetByOrderID(ctx context.Context, orderID string) (*model.Payment, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	q := `
 		SELECT id, order_id, transaction_id, amount, status
 		FROM payments
@@ -42,6 +48,9 @@ func (r *PaymentRepository) GetByOrderID(ctx context.Context, orderID string) (*
 }
 
 func (r *PaymentRepository) FindByAmountRange(ctx context.Context, min, max int64) ([]*model.Payment, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
 	query := "SELECT id, amount, status FROM payments WHERE 1=1"
 	args := []interface{}{}
 	argCount := 1
