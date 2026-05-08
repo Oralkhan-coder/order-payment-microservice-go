@@ -9,6 +9,46 @@ The system consists of two independent microservices communicating over REST:
 - **Order Service (Port 8080)**: Manages order lifecycles (Pending, Paid, Failed, Cancelled).
 - **Payment Service (Port 8081)**: Processes authorizations and declines.
 
+```mermaid
+flowchart TD
+    Client["Client"]
+
+    subgraph OrderSvc["Order Service :8080"]
+        OH["HTTP Handler"]
+        OS["Order Use Case"]
+        OR["Order Repository"]
+    end
+
+    subgraph PaymentSvc["Payment Service :8081"]
+        PH["HTTP / gRPC Handler"]
+        PS["Payment Use Case"]
+        PR["Payment Repository"]
+        MQ["RabbitMQ Publisher"]
+    end
+
+    subgraph NotifSvc["Notification Service"]
+        NC["RabbitMQ Consumer"]
+        NR["Idempotency Repository"]
+    end
+
+    ODB[("PostgreSQL\norders_db")]
+    PDB[("PostgreSQL\npayments_db")]
+    RabbitMQ[["RabbitMQ"]]
+
+    Client -->|"REST"| OH
+    OH --> OS
+    OS --> OR
+    OR --> ODB
+    OS -->|"HTTP POST /payments"| PH
+    PH --> PS
+    PS --> PR
+    PR --> PDB
+    PS --> MQ
+    MQ --> RabbitMQ
+    RabbitMQ --> NC
+    NC --> NR
+```
+
 ### Key Design Principles (Best-Case Design)
 - **Thin Handlers**: Business logic and state transitions reside in the Use Case layer.
 - **Dependency Injection**: Manual DI implemented at the Composition Root (`main.go`).
