@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Oralkhan-coder/order-service/internal/transport/http/handler"
+	"github.com/Oralkhan-coder/order-service/internal/transport/http/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,10 +13,11 @@ type Server struct {
 	orderHandler *handler.OrderHandler
 }
 
-func NewServer(srv handler.OrderSrv) *Server {
+func NewServer(srv handler.OrderSrv, limiter middleware.RateLimiter) *Server {
 	orderHandler := handler.NewOrderHandler(srv)
 
 	router := gin.Default()
+	router.Use(middleware.RateLimit(limiter))
 
 	router.POST("/order", orderHandler.CreateOrder)
 	router.GET("/order/:id", orderHandler.GetOrder)

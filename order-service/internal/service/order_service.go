@@ -20,12 +20,14 @@ var (
 type OrderService struct {
 	repo          OrderRepo
 	paymentClient PaymentGRPCClient
+	cache         OrderCache
 }
 
-func NewOrderService(repo OrderRepo, paymentClient PaymentGRPCClient) *OrderService {
+func NewOrderService(repo OrderRepo, paymentClient PaymentGRPCClient, cache OrderCache) *OrderService {
 	return &OrderService{
 		repo:          repo,
 		paymentClient: paymentClient,
+		cache:         cache,
 	}
 }
 
@@ -50,6 +52,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, customerID string, itemN
 	if err != nil {
 		log.Printf("Payment authorization failed for order %s: %v", order.ID, err)
 		_ = s.repo.UpdateStatus(ctx, order.ID, model.OrderStatusFailed)
+		_ = s.cache.Delete(ctx, order.ID)
 		return order.ID, ErrPaymentUnavailable
 	}
 
@@ -62,12 +65,27 @@ func (s *OrderService) CreateOrder(ctx context.Context, customerID string, itemN
 			return order.ID, err
 		}
 	}
+	// Invalidate cache after status change
+	_ = s.cache.Delete(ctx, order.ID)
 
 	return order.ID, nil
 }
 
 func (s *OrderService) GetOrder(ctx context.Context, id string) (*model.Order, error) {
-	return s.repo.GetByID(ctx, id)
+	// Cache-aside read path
+	if cached, err := s.cache.Get(ctx, id); err != nil {
+		log.Printf("cache get error for order %s: %v", id, err)
+	} else if cached != nil {
+		return cached, nil
+	}
+
+	order, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = s.cache.Set(ctx, order)
+	return order, nil
 }
 
 func (s *OrderService) GetOrderStatus(ctx context.Context, id string) (*model.OrderStatus, error) {
@@ -90,5 +108,9 @@ func (s *OrderService) CancelOrder(ctx context.Context, id string) error {
 		return errors.New("only pending orders can be cancelled")
 	}
 
-	return s.repo.UpdateStatus(ctx, id, model.OrderStatusCancelled)
+	if err := s.repo.UpdateStatus(ctx, id, model.OrderStatusCancelled); err != nil {
+		return err
+	}
+	_ = s.cache.Delete(ctx, id)
+	return nil
 }

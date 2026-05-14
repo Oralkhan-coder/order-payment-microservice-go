@@ -16,3 +16,9 @@ type OrderRepo interface {
 type PaymentGRPCClient interface {
 	Pay(ctx context.Context, orderID string, amount int64) (string, error)
 }
+
+type OrderCache interface {
+	Get(ctx context.Context, id string) (*model.Order, error)
+	Set(ctx context.Context, order *model.Order) error
+	Delete(ctx context.Context, id string) error
+}

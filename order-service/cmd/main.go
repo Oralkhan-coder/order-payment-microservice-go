@@ -7,6 +7,7 @@ import (
 	"github.com/Oralkhan-coder/order-service/config"
 	"github.com/Oralkhan-coder/order-service/internal/infrastructure/grpcconn"
 	"github.com/Oralkhan-coder/order-service/internal/infrastructure/postgres"
+	redisinfra "github.com/Oralkhan-coder/order-service/internal/infrastructure/redis"
 	"github.com/Oralkhan-coder/order-service/internal/repository"
 	"github.com/Oralkhan-coder/order-service/internal/service"
 	"github.com/Oralkhan-coder/order-service/internal/transport/grpc"
@@ -28,16 +29,25 @@ func main() {
 	}
 	defer db.Close()
 
+	redisClient, err := redisinfra.NewClient(cfg.RedisHost, cfg.RedisPort)
+	if err != nil {
+		log.Fatalf("unable to connect to redis: %v", err)
+	}
+	defer redisClient.Close()
+
+	orderCache := redisinfra.NewOrderCache(redisClient, cfg.CacheTTL)
+	rateLimiter := redisinfra.NewRateLimiter(redisClient, cfg.RateLimitRequests, cfg.RateLimitWindow)
+
 	paymentClient, err := grpcconn.NewGRPCPaymentConn(cfg.PaymentServiceHost, cfg.PaymentServicePort)
 	if err != nil {
 		log.Fatalf("unable to connect to payment service: %v", err)
 	}
 
 	orderRepo := repository.NewOrderRepository(db)
-	orderService := service.NewOrderService(orderRepo, paymentClient)
+	orderService := service.NewOrderService(orderRepo, paymentClient, orderCache)
 
 	grpcServer := grpc.NewOrderGRPCServer(orderService)
-	server := http.NewServer(orderService)
+	server := http.NewServer(orderService, rateLimiter)
 
 	go func() {
 		grpcServer.Run(ctx)

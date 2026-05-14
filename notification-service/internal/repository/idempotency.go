@@ -1,19 +1,26 @@
 package repository
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
-type IdempotencyStore struct {
+type IdempotencyStore interface {
+	MarkIfNew(ctx context.Context, id string) (bool, error)
+}
+
+type InMemoryIdempotencyStore struct {
 	processed sync.Map
 }
 
-func NewIdempotencyStore() *IdempotencyStore {
-	return &IdempotencyStore{}
+func NewInMemoryIdempotencyStore() *InMemoryIdempotencyStore {
+	return &InMemoryIdempotencyStore{}
 }
 
-func (s *IdempotencyStore) MarkIfNew(eventID string) bool {
-	if eventID == "" {
-		return true
+func (s *InMemoryIdempotencyStore) MarkIfNew(_ context.Context, id string) (bool, error) {
+	if id == "" {
+		return true, nil
 	}
-	_, loaded := s.processed.LoadOrStore(eventID, true)
-	return !loaded
+	_, loaded := s.processed.LoadOrStore(id, true)
+	return !loaded, nil
 }
